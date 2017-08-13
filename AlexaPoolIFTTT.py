@@ -1,5 +1,5 @@
-# Amazon Alexa to iAquaLink IFTTT Maker Module
-# Evan Greavu - July 15th 2016
+# Amazon Alexa to iAquaLink Pool Control
+# Evan Greavu - Updated August 13th 2017
 # Version 1.10
 # Version info: Several fixes, prepared for public release.
 
@@ -18,8 +18,10 @@ MY_KEY = '555'
 # TIMING
 # Automatically turns on and off the lights per schedule.
 
-AUTO_LIGHTING_HOURS_START = 0 # 20 is 8 PM. 0 to disable timer completely.
-AUTO_LIGHTING_HOURS_END = 5 # 5 is 5 AM.
+AUTO_LIGHTING_HOURS_START = 0 # Time when the lights turn on. 20 is 8 PM.
+                              # 0 to disable timer completely.
+
+AUTO_LIGHTING_HOURS_END = 5 # Time when the lights turn off. 5 is 5 AM.
 
 #######################################################################################################
 
