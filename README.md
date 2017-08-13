@@ -26,7 +26,7 @@ Then choose the Webhooks action service.
 
 The URL should be set to your IP address. IFTTT.com is going to send an HTTP POST request to port 3737 on this IP address.
 
-#### If neccessary, forward the port TCP 3737 to the computer running the Python script.
+#### If neccessary, on your router forward the port TCP 3737 to the computer running the Python script.
 
 ![alt text](http://i.imgur.com/v0o4PFB.png "IFTTT Webhooks service details")
 
@@ -34,7 +34,7 @@ The method of the request is POST.
 
 The content type is application/json.
 
-## Request JSON Body
+### Request JSON Body
 
 The body of this request must be formatted correctly as a JSON table. This is what a correctly formatted request contains:
 
@@ -47,6 +47,8 @@ The `device` field contains the name of the device being targeted: TUB, POOL, LI
 The `mode` field contains the desired state of the device: ON or OFF.
 
 # Warning
+
+## This script is partially incomplete.
 
 This script attempts to navigate the web interface for iAqualink. Depending on your pool equipment, some buttons in the webpages may be out of order causing the script to malfunction. 
 If everything appears to be setup correctly and your pool is being controlled incorrectly, contact me!
