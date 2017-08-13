@@ -1,19 +1,39 @@
 # Amazon Alexa to iAquaLink IFTTT Maker Module
-# Written by Evan Greavu - July 15th 2016
-# Version 1.01
+# Evan Greavu - July 15th 2016
+# Version 1.10
+# Version info: Several fixes, prepared for public release.
 
-# Update 1.01: Fixed logic for switching between hot tub mode and pool mode, cleaned up print calls, and adjusted waits.
+### AQUALINK LOGIN
+### IMPORTANT!
+### Set the login information to your iAqualink Zodiac pool systems account here.
+AQUA_USERNAME = 'AQUALINK_USERNAME'
+AQUA_PASSWORD = 'AQUALINK_PASSWORD'
 
+### REQUEST KEY
+### IMPORTANT!
+### Set this key to anything you want, then set your IFTTT requests to send this key in the json body.
+### More information is on the AlexaPoolIFTTT Github README.
+MY_KEY = '555'
 
-# Timing
+# TIMING
+# Automatically turns on and off the lights per schedule.
+
+AUTO_LIGHTING_HOURS_START = 0 # 20 is 8 PM. 0 to disable timer completely.
+AUTO_LIGHTING_HOURS_END = 5 # 5 is 5 AM.
+
+#######################################################################################################
+
+# System
+import os
 import time
 
-# Flask Hosting
+# Flask
 from flask import Flask, request
 
 # Selenium Interactions
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium import common
 
 # Selenium Timing
 from selenium.webdriver.common.by import By
@@ -23,12 +43,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # FLASK AND API SETTINGS
 app = Flask(__name__)
-MY_KEY = 'bOx6VIa4e2SXn2yjfNnPt2'
 
-
-# TIMING
-AUTO_LIGHTING_HOURS_START = 19 # 20 is 8 PM. 0 to disable.
-AUTO_LIGHTING_HOURS_END = 5
 
 def getHour():
     return int(time.strftime("%H"))
@@ -42,21 +57,34 @@ def isNight():
 
 
 # BROWSER INTERACTION
+
 AQUA_URL = 'https://iaqualink.zodiacpoolsystems.com/start/mobile/?actionID=AlzZVnPMfHDU5&lang=en'
-AQUA_USERNAME = 'wescg@cox.net'
-AQUA_PASSWORD = 'Cbrsw1313'
 AQUA_TOGGLE_ON = 'https://iaqualink.zodiacpoolsystems.com/files/images/aux_0_1.png'
 AQUA_TOGGLE_OFF = 'https://iaqualink.zodiacpoolsystems.com/files/images/aux_0_0.png'
 AQUA_TOGGLE_ALTERNATE = 'https://iaqualink.zodiacpoolsystems.com/files/images/aux_0_3.png'
 
+
 def newBrowser():
-    return webdriver.PhantomJS('C:/PhantomJS/bin/phantomjs.exe')
+    path = os.path.abspath(os.path.dirname(__file__)) + '/phantomjs.exe'
+    new_browser = None
+
+    try:
+        new_browser = webdriver.PhantomJS(path)
+        return new_browser
+
+    except:
+        print ('CRITICAL ERROR: phantomjs.exe not found in directory of this script.\n'
+               'Please download and place a copy of phantomjs.exe in the same directory as this script.')
+
+    finally:
+        return new_browser
+
 
 def openAqua(browser):
     browser.get(AQUA_URL)
     if 'iAquaLink Email Address:' in browser.page_source:
         assert 'Sign In' in browser.page_source
-        print ('Logging in...')
+        print ('Logging in to iAqualink...')
         userID = browser.find_element_by_id('userID')
         userPassword = browser.find_element_by_id('userPassword')
         userID.clear()
@@ -65,14 +93,21 @@ def openAqua(browser):
         userPassword.send_keys(AQUA_PASSWORD)
         userPassword.send_keys(Keys.RETURN)
 
-        WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "spa_pump_state")))
-        return browser
+        try:
+            WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "spa_pump_state")))
+            return browser
 
-# Global BROWSER is a browser that all interactions should run out of.
-# When an event is triggered, check the status of BROWSER.
+        except common.exceptions.TimeoutException:
+            print ('CRITICAL: iAqualink login information is incorrect.')
+            quit()
+
+
+# When an event is triggered, check the status of BROWSER, the global browser variable for PhantomJS
 # If not logged in, instantiate a new Aqua browser and update BROWSER accordingly.
 global BROWSER
+print ("Initializing...")
 BROWSER = openAqua(newBrowser())
+print ("Successfully logged into iAqualink.")
 
 def refreshBROWSER():
     global BROWSER
@@ -247,9 +282,11 @@ def allOn(browser=BROWSER):
 # IFTTT INTERACTION
 @app.route('/', methods=['POST'])
 def trigger():
-    if request.method == 'POST':
-        json = request.get_json()
-        if json['apiKey'] == MY_KEY:
+    if not request.is_json:
+        print ('Invalid request. Please see the wiki for information on setting up IFTTT for use with this script.')
+    else:
+        json = request.get_json(force=True)
+        if json['key'] == MY_KEY:
             refreshBROWSER()
             if json['device'] == 'TUB':
                 if json['mode'] == 'ON':
@@ -282,12 +319,20 @@ def trigger():
                 elif json['mode'] == 'OFF':
                     result = allOff()
             else:
-                print ('CRITICAL ERROR! Unspecified device. ITFFF is set wrong!')
+                print('CRITICAL ERROR! Unspecified device in request JSON: ' + json['device'])
+                return 'failure'
+
+            return 'success'
+
         else:
-            print ("WARNING!: Unknown API key attempted to trigger an event.")
-    return 'Success'
+            print("WARNING!: Request with invalid key attempted to trigger an event: " + json['key'])
+
+    return 'failure'
+
 
 
 # RUNNING
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port='3737')
+    print ("CRITICAL: Server stopped unexpectedly!")
+    sys.exit(8)
