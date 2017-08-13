@@ -18,9 +18,11 @@ PhantomJS is a portable, invisible web browser that the script uses to communica
 
 This script uses IFTTT.com to communciate with the Amazon Alexa. You will have to create an IFTTT service for every command to be said to your Alexa ("Alexa, trigger pool on" or "Alexa, trigger hot tub off", etc.)
 
-To begin, create an IFTTT applet triggered by Amazon Alexa - Say a specific phrase.
+To begin, create an IFTTT applet triggered by Amazon Alexa - Say a specific phrase, and set it up for the command you want to be executing.
 
 Then choose the Webhooks action service. 
+
+### Webhooks 
 
 The URL should be set to your IP address. IFTTT.com is going to send an HTTP POST request to port 3737 on this IP address.
 
