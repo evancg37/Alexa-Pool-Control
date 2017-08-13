@@ -48,3 +48,4 @@ The `mode` field contains the desired state of the device: ON or OFF.
 
 This script attempts to navigate the web interface for iAqualink. Depending on your pool equipment, some buttons in the webpages may be out of order causing the script to malfunction. 
 If everything appears to be setup correctly and your pool is being controlled incorrectly, contact me!
+
