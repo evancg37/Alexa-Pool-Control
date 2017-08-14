@@ -1,13 +1,13 @@
 # Amazon Alexa to iAquaLink Pool Control
 # Evan Greavu - Updated August 13th 2017
-# Version 1.10
-# Version info: Several fixes, prepared for public release.
+# Version 1.11
+# Version info: Automatic timer functionality improved
 
 ### AQUALINK LOGIN
 ### IMPORTANT!
 ### Set the login information to your iAqualink Zodiac pool systems account here.
-AQUA_USERNAME = 'AQUALINK_USERNAME'
-AQUA_PASSWORD = 'AQUALINK_PASSWORD'
+AQUA_USERNAME = 'IAQUALINK_USERNAME'
+AQUA_PASSWORD = 'IAQUALINK_PASSWORD'
 
 ### REQUEST KEY
 ### IMPORTANT!
@@ -16,21 +16,23 @@ AQUA_PASSWORD = 'AQUALINK_PASSWORD'
 MY_KEY = '555'
 
 # TIMING
-# Automatically turns on and off the lights per schedule.
+# Automatically turns the lights on and off per schedule.
 
-AUTO_LIGHTING_HOURS_START = 0 # Time when the lights turn on. 20 is 8 PM.
-                              # 0 to disable timer completely.
+AUTO_LIGHTING_HOURS_START = 19 # Time when the lights will turn on in 24hr time. 20 is 8 PM.
+                               # -1 to disable timer functionality completely.
 
-AUTO_LIGHTING_HOURS_END = 5 # Time when the lights turn off. 5 is 5 AM.
+AUTO_LIGHTING_HOURS_END = 3 # Time when the lights turn off in 24hr time. 3 is 3 AM.
 
 #######################################################################################################
 
 # System
 import os
 import time
+import threading
 
 # Flask
 from flask import Flask, request
+app = Flask(__name__)
 
 # Selenium Interactions
 from selenium import webdriver
@@ -41,21 +43,6 @@ from selenium import common
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
-
-# FLASK AND API SETTINGS
-app = Flask(__name__)
-
-
-def getHour():
-    return int(time.strftime("%H"))
-
-def isNight():
-    hour = int(getHour())
-    if hour <= AUTO_LIGHTING_HOURS_END or hour >= AUTO_LIGHTING_HOURS_START and AUTO_LIGHTING_HOURS_START != 0:
-        return True
-    else:
-        return False
 
 
 # BROWSER INTERACTION
@@ -118,6 +105,37 @@ def refreshBROWSER():
         print ("Logging into a new BROWSER.")
         BROWSER.quit()
         BROWSER = openAqua(newBrowser())
+
+
+# AUTOMATIC TIMING
+
+def getHour():
+    return int(time.strftime("%H"))
+
+def isNight():
+    hour = int(getHour())
+    if hour <= AUTO_LIGHTING_HOURS_END or hour >= AUTO_LIGHTING_HOURS_START:
+        return True
+    else:
+        return False
+
+def timerLoop():
+    print ('Timer loop started.')
+    while True:
+        if isNight():
+            print ('It\'s nighttime! Automatically turning on the lights...')
+            lightsOn()
+        else:
+            print ('It\'s daytime! Automatically turning off the lights...')
+            lightsOff()
+        time.sleep(60)
+
+def startTimerLoop():
+    t = threading.Thread(target=timerLoop)
+    t.start()
+
+
+# BROWSER FUNCTIONALITY
 
 def checkElementToggle(element):
     imgSrc = element.get_attribute("src")
@@ -335,6 +353,11 @@ def trigger():
 
 # RUNNING
 if __name__ == "__main__":
+
+    if AUTO_LIGHTING_HOURS_START != -1:
+        startTimerLoop()
+
     app.run(host='0.0.0.0',port='3737')
+
     print ("CRITICAL: Server stopped unexpectedly!")
     sys.exit(8)
