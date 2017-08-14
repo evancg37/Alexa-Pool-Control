@@ -18,7 +18,7 @@ MY_KEY = '555'
 # TIMING
 # Automatically turns the lights on and off per schedule.
 
-AUTO_LIGHTING_HOURS_START = 19 # Time when the lights will turn on in 24hr time. 20 is 8 PM.
+AUTO_LIGHTING_HOURS_START = -1 # Time when the lights will turn on in 24hr time. 20 is 8 PM.
                                # -1 to disable timer functionality completely.
 
 AUTO_LIGHTING_HOURS_END = 3 # Time when the lights turn off in 24hr time. 3 is 3 AM.
